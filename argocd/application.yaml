@@ -1,0 +1,57 @@
+# =============================================================================
+# APPLICATION CRD - Core ArgoCD resource that defines what to deploy
+# =============================================================================
+# An Application tells ArgoCD:
+#   - WHERE to find the manifests (source Git repo + path)
+#   - WHERE to deploy them (destination cluster + namespace)
+#   - HOW to sync (automatic vs manual, prune, self-heal)
+#
+# This is the fundamental building block of ArgoCD.
+# One Application = one deployable unit from one Git path.
+#
+# Sync Policies:
+#   - Manual: You click "Sync" in the UI or run `argocd app sync`
+#   - Automated: ArgoCD syncs whenever it detects Git changes
+#     - selfHeal: Reverts manual kubectl changes to match Git
+#     - prune: Deletes resources removed from Git
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitops-demo                         # Name shown in ArgoCD UI
+  namespace: argocd                         # Applications live in the argocd namespace
+  # Optional: add finalizer so ArgoCD cleans up resources when Application is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # --- Which ArgoCD Project this app belongs to ---
+  project: default                          # "default" project allows everything
+
+  # --- Source: where to find the Kubernetes manifests ---
+  source:
+    repoURL: https://github.com/yuradmytriev/argo-study.git   # Your Git repository
+    targetRevision: HEAD                    # Branch, tag, or commit SHA to track
+    path: k8s                              # Path within repo containing manifests
+
+  # --- Destination: where to deploy the manifests ---
+  destination:
+    server: https://kubernetes.default.svc  # In-cluster (where ArgoCD runs)
+    namespace: gitops-demo                  # Target namespace for resources
+
+  # --- Sync Policy: how ArgoCD handles changes ---
+  syncPolicy:
+    automated:                              # Enable automatic syncing
+      selfHeal: true                        # Revert manual changes to match Git
+      prune: true                           # Delete resources removed from Git
+
+    syncOptions:
+    - CreateNamespace=true                  # Create namespace if it doesn't exist
+    - PruneLast=true                        # Delete removed resources after new ones are healthy
+
+    retry:
+      limit: 5                             # Retry failed syncs up to 5 times
+      backoff:
+        duration: 5s                        # Wait 5s before first retry
+        factor: 2                           # Double the wait time each retry
+        maxDuration: 3m                     # Never wait longer than 3 minutes

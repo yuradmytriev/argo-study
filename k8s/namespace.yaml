@@ -1,0 +1,17 @@
+# =============================================================================
+# NAMESPACE - Isolated environment for our ArgoCD-managed app
+# =============================================================================
+# ArgoCD deploys resources into target namespaces.
+# Keeping apps in their own namespace:
+#   - Isolates resources from other teams/projects
+#   - Makes it easy for ArgoCD to track what it manages
+#   - Enables per-namespace RBAC and resource quotas
+# =============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitops-demo
+  labels:
+    purpose: argocd-study
+    managed-by: argocd                  # Label indicating ArgoCD manages this

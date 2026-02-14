@@ -1,0 +1,38 @@
+# =============================================================================
+# DEV OVERLAY - Development environment customizations
+# =============================================================================
+# Overrides the base with dev-specific settings:
+#   - 1 replica (save resources)
+#   - Lower resource limits
+#   - APP_ENV set to "dev"
+#
+# Preview: kubectl kustomize environments/dev
+# Apply:   kubectl apply -k environments/dev
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the shared base
+resources:
+- ../base
+
+# Add environment-specific labels
+commonLabels:
+  environment: dev
+
+# Override the namespace for all resources
+namespace: gitops-demo-dev
+
+# Patches to apply on top of base
+patches:
+- path: patch-replicas.yaml
+
+# Override ConfigMap values for this environment
+configMapGenerator:
+- name: app-config
+  behavior: replace
+  literals:
+  - APP_VERSION=1.0.0
+  - APP_ENV=dev
+  - LOG_LEVEL=debug                         # More verbose logging in dev

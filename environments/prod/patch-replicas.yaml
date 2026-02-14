@@ -1,0 +1,22 @@
+# =============================================================================
+# PROD PATCH - Full production resources
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-demo-app
+spec:
+  replicas: 3                               # 3 replicas in production
+
+  template:
+    spec:
+      containers:
+      - name: app
+        resources:
+          requests:
+            memory: "128Mi"                 # More memory guaranteed
+            cpu: "200m"                     # More CPU guaranteed
+          limits:
+            memory: "256Mi"
+            cpu: "500m"

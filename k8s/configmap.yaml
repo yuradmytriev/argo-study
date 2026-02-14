@@ -1,0 +1,22 @@
+# =============================================================================
+# CONFIGMAP - Application configuration managed via GitOps
+# =============================================================================
+# ConfigMaps are ideal for GitOps because:
+#   - Version changes are tracked in Git history
+#   - No image rebuild needed to change config
+#   - ArgoCD detects config drift and syncs automatically
+#
+# Common GitOps pattern:
+#   - Store APP_VERSION here instead of hardcoding in Deployment
+#   - CI pipeline updates this file, ArgoCD deploys the change
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: gitops-demo
+data:
+  APP_VERSION: "1.0.0"                     # Bump this to trigger a GitOps rollout
+  APP_ENV: "development"
+  LOG_LEVEL: "info"

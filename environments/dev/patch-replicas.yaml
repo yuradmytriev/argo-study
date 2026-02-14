@@ -1,0 +1,27 @@
+# =============================================================================
+# DEV PATCH - Override replica count and resources
+# =============================================================================
+# Strategic merge patch: only the fields listed here are changed.
+# Everything else comes from the base Deployment.
+#
+# Dev uses minimal resources since it's for testing only.
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-demo-app
+spec:
+  replicas: 1                               # Single replica in dev
+
+  template:
+    spec:
+      containers:
+      - name: app
+        resources:
+          requests:
+            memory: "32Mi"                  # Less memory in dev
+            cpu: "50m"                      # Less CPU in dev
+          limits:
+            memory: "64Mi"
+            cpu: "100m"

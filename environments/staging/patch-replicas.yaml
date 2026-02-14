@@ -1,0 +1,22 @@
+# =============================================================================
+# STAGING PATCH - Production-like but smaller scale
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-demo-app
+spec:
+  replicas: 2                               # 2 replicas in staging
+
+  template:
+    spec:
+      containers:
+      - name: app
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"

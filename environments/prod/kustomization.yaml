@@ -1,0 +1,36 @@
+# =============================================================================
+# PROD OVERLAY - Production environment
+# =============================================================================
+# Highest resource allocation and replica count.
+# Changes here should go through staging first (environment promotion).
+#
+# GitOps promotion workflow:
+#   1. Merge to main → ArgoCD syncs dev automatically
+#   2. QA approves → update staging overlay → ArgoCD syncs staging
+#   3. Staging verified → update prod overlay → ArgoCD syncs prod
+#
+# Preview: kubectl kustomize environments/prod
+# Apply:   kubectl apply -k environments/prod
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../base
+
+commonLabels:
+  environment: prod
+
+namespace: gitops-demo-prod
+
+patches:
+- path: patch-replicas.yaml
+
+configMapGenerator:
+- name: app-config
+  behavior: replace
+  literals:
+  - APP_VERSION=1.0.0
+  - APP_ENV=production
+  - LOG_LEVEL=warn                          # Only warnings and errors in prod

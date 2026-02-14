@@ -1,0 +1,27 @@
+# =============================================================================
+# KUSTOMIZE BASE - Lists all shared resources
+# =============================================================================
+# Kustomize uses this file to know which manifests to include.
+# Overlays reference this base and apply patches on top.
+#
+# How Kustomize works:
+#   1. Read all resources listed here
+#   2. Apply any transformations (labels, annotations, etc.)
+#   3. Output the final YAML
+#
+# Run: kubectl kustomize environments/base
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Common labels added to ALL resources
+commonLabels:
+  managed-by: argocd
+  part-of: gitops-demo
+
+# Resources to include
+resources:
+- deployment.yaml
+- service.yaml
+- configmap.yaml

@@ -1,0 +1,85 @@
+# =============================================================================
+# APPLICATIONSET - Deploy to multiple environments from one template
+# =============================================================================
+# ApplicationSet is a controller that generates ArgoCD Applications
+# automatically based on generators. Instead of writing one Application
+# per environment (dev, staging, prod), you write ONE template.
+#
+# Generators:
+#   - List: Explicitly define parameters for each environment
+#   - Git Directory: One app per directory in a repo
+#   - Git File: Read parameters from JSON/YAML files in repo
+#   - Cluster: One app per registered cluster
+#   - Matrix: Combine two generators (e.g., clusters x environments)
+#   - Merge: Merge parameters from multiple generators
+#
+# This example uses the List generator with Kustomize overlays
+# to deploy dev, staging, and prod from the environments/ directory.
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gitops-demo-environments
+  namespace: argocd
+spec:
+  # --- Generator: defines the parameter sets ---
+  generators:
+  - list:
+      elements:
+      # Each element becomes a separate ArgoCD Application
+      - env: dev
+        namespace: gitops-demo-dev
+        replicas: "1"
+      - env: staging
+        namespace: gitops-demo-staging
+        replicas: "2"
+      - env: prod
+        namespace: gitops-demo-prod
+        replicas: "3"
+
+  # --- Template: Application that gets created for each element ---
+  template:
+    metadata:
+      # {{env}} is replaced with values from each list element
+      name: gitops-demo-{{env}}
+    spec:
+      project: gitops-demo-project
+
+      source:
+        repoURL: https://github.com/yuradmytriev/argo-study.git
+        targetRevision: HEAD
+        # Each environment uses its own Kustomize overlay
+        path: environments/{{env}}
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'          # Different namespace per environment
+
+      syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
+        syncOptions:
+        - CreateNamespace=true
+
+  # --- Strategy: how to handle updates across environments ---
+  strategy:
+    type: RollingSync                       # Sync environments one at a time
+    rollingSync:
+      steps:
+      - matchExpressions:
+        - key: env
+          operator: In
+          values:
+          - dev                             # Deploy to dev first
+      - matchExpressions:
+        - key: env
+          operator: In
+          values:
+          - staging                         # Then staging
+      - matchExpressions:
+        - key: env
+          operator: In
+          values:
+          - prod                            # Finally production

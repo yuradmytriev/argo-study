@@ -1,0 +1,14 @@
+# =============================================================================
+# BASE CONFIGMAP - Default configuration values
+# =============================================================================
+# Overlays can patch individual keys to set environment-specific values.
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_VERSION: "1.0.0"
+  APP_ENV: "base"
+  LOG_LEVEL: "info"

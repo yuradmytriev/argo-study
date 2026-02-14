@@ -1,0 +1,77 @@
+# =============================================================================
+# APPPROJECT - RBAC and access control for ArgoCD Applications
+# =============================================================================
+# An AppProject defines boundaries for a group of Applications:
+#   - Which Git repos can be used as sources
+#   - Which clusters/namespaces can be deployment targets
+#   - Which Kubernetes resources are allowed or denied
+#   - Which team members can access the project
+#
+# Why use Projects?
+#   - Multi-tenancy: different teams get different projects
+#   - Security: restrict what each team can deploy and where
+#   - Organization: group related applications together
+#
+# The "default" project allows everything. Custom projects restrict access.
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gitops-demo-project
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Learning project for ArgoCD GitOps demos
+
+  # --- Source repositories: where manifests can come from ---
+  sourceRepos:
+  - 'https://github.com/yuradmytriev/argo-study.git'   # Only allow this repo
+  # - '*'                                               # Or allow all repos (less secure)
+
+  # --- Destinations: where apps can be deployed ---
+  destinations:
+  - server: https://kubernetes.default.svc
+    namespace: gitops-demo                  # Allow deploying to gitops-demo
+  - server: https://kubernetes.default.svc
+    namespace: gitops-demo-dev
+  - server: https://kubernetes.default.svc
+    namespace: gitops-demo-staging
+  - server: https://kubernetes.default.svc
+    namespace: gitops-demo-prod
+
+  # --- Allowed cluster resources (cluster-scoped, like Namespaces) ---
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace                         # Allow creating Namespaces
+
+  # --- Allowed namespace resources ---
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: ConfigMap
+  - group: ''
+    kind: Service
+  - group: apps
+    kind: Deployment
+  # Anything NOT listed here is denied (whitelist approach)
+
+  # --- Resource blacklist: explicitly deny dangerous resources ---
+  # namespaceResourceBlacklist:
+  # - group: ''
+  #   kind: Secret                          # Could block Secrets for extra safety
+
+  # --- RBAC Roles: who can do what in this project ---
+  roles:
+  - name: developer
+    description: Read-only access plus sync
+    policies:
+    - p, proj:gitops-demo-project:developer, applications, get, gitops-demo-project/*, allow
+    - p, proj:gitops-demo-project:developer, applications, sync, gitops-demo-project/*, allow
+    # Format: p, <role>, <resource>, <action>, <project>/<object>, <allow/deny>
+    # Actions: get, create, update, delete, sync, override
+
+  - name: admin
+    description: Full access to the project
+    policies:
+    - p, proj:gitops-demo-project:admin, applications, *, gitops-demo-project/*, allow

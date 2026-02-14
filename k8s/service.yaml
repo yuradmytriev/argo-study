@@ -1,0 +1,26 @@
+# =============================================================================
+# SERVICE - Stable network endpoint for the GitOps demo app
+# =============================================================================
+# The Service provides:
+#   - A stable IP that doesn't change when Pods restart
+#   - Load balancing across all healthy Pods
+#   - DNS-based service discovery within the cluster
+#
+# ArgoCD tracks this resource just like the Deployment.
+# Any changes pushed to Git will be synced to the cluster.
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitops-demo-service
+  namespace: gitops-demo
+spec:
+  type: NodePort                            # Exposes on a port on each Node
+  selector:
+    app: gitops-demo                        # Routes traffic to matching Pods
+  ports:
+  - protocol: TCP
+    port: 80                                # Service port (internal)
+    targetPort: 3000                        # Container port
+    nodePort: 30090                         # External port on Node (30000-32767)
